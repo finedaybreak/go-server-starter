@@ -1,0 +1,15 @@
+server:
+  port: 8090
+  readTimeout: 10s
+  writeTimeout: 10s
+  maxHeaderKB: 2048
+  snowflakeNode: 1
+  apiPrefix: /api
+logger:
+  level: debug
+  fileDir: ./logs/dev
+  maxSize: 100
+  maxAge: 30
+  maxBackups: 10
+  compress: false
+  consoleOutput: true

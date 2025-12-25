@@ -1,0 +1,60 @@
+server:
+  port: 8080
+  readTimeout: 10s
+  writeTimeout: 10s
+  maxHeaderKB: 2048
+  snowflakeNode: 1
+  apiPrefix: "/api"
+
+jwt:
+  issuer: go-server-starter
+  tokenSecret: tokenSecret@123
+  tokenExpires:
+    web: 24h
+    desktop: 360h           # 15 * 24 hours
+    mobile: 360h            # 15 * 24 hours
+    chromeExtension: 720h   # 30 * 24 hours
+    api: 48h                # 2 * 24 hours
+    default: 24h            # 1 * 24 hours
+
+database:
+  host: localhost
+  port: 3306
+  username: root
+  password: root
+  databaseName: test_db
+  maxIdleConns: 10
+  maxOpenConns: 100
+  connMaxLifetime: 10s
+  timezone: UTC
+  charset: utf8mb4
+  parseTime: true
+
+redis:
+  host: localhost
+  port: 6379
+  password: root
+  db: 0
+
+asynQ:
+  redisConfig:
+    host: localhost
+    port: 6379
+    password: root
+    db: 1
+  concurrency: 10
+
+logger:
+  level: info
+  fileDir: ./logs
+  maxSize: 100        # MB
+  maxAge: 30          # days
+  maxBackups: 10
+  compress: false
+  consoleOutput: true
+
+gormLogger:
+  level: info
+  slowThreshold: 100ms
+  skipCallerLookup: false
+  ignoreRecordNotFoundError: true
