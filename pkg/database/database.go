@@ -4,9 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 	"go-server-starter/internal/config"
-	"net/url"
 
+	mysqlDriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
@@ -24,21 +25,27 @@ func (db *DB) Close() error {
 	return sqlDB.Close()
 }
 
-func NewDB(config config.DatabaseConfig, logger logger.Interface, gormConfig *gorm.Config) (*DB, error) {
+func NewDB(cfg config.DatabaseConfig, logger logger.Interface, gormConfig *gorm.Config) (*DB, error) {
 	// Validate connection pool parameters
-	if config.MaxIdleConns > config.MaxOpenConns {
+	if cfg.MaxIdleConns > cfg.MaxOpenConns {
 		return nil, errors.New("MaxIdleConns cannot be greater than MaxOpenConns")
 	}
-	if config.MaxOpenConns <= 0 {
+	if cfg.MaxOpenConns <= 0 {
 		return nil, errors.New("MaxOpenConns must be greater than 0")
 	}
 
-	var dsn = GetMySQLDSN(config)
+	loc, _ := time.LoadLocation(cfg.Timezone)
 
-	dialector := mysql.New(mysql.Config{
-		DSN:               dsn,
-		DefaultStringSize: 256,
-	})
+	// Connect to MySQL server without database name
+	mysqlConfig := &mysqlDriver.Config{
+		User:      cfg.Username,
+		Passwd:    cfg.Password,
+		Net:       "tcp",
+		Addr:      fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		ParseTime: cfg.ParseTime,
+		Loc:       loc,
+		Params:    map[string]string{"charset": cfg.Charset},
+	}
 
 	GConfig := gormConfig
 	if GConfig == nil {
@@ -46,9 +53,22 @@ func NewDB(config config.DatabaseConfig, logger logger.Interface, gormConfig *go
 	}
 	GConfig.Logger = logger
 
-	db, err := gorm.Open(dialector, GConfig)
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:               mysqlConfig.FormatDSN(),
+		DefaultStringSize: 256,
+	}), GConfig)
 	if err != nil {
-		return nil, fmt.Errorf("failed to open database: %w with dsn: %s", err, dsn)
+		return nil, fmt.Errorf("failed to connect to MySQL server: %w", err)
+	}
+
+	// Create database if not exists and switch to it
+	createSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET %s", cfg.DatabaseName, cfg.Charset)
+	if err := db.Exec(createSQL).Error; err != nil {
+		return nil, fmt.Errorf("failed to create database: %w", err)
+	}
+
+	if err := db.Exec(fmt.Sprintf("USE `%s`", cfg.DatabaseName)).Error; err != nil {
+		return nil, fmt.Errorf("failed to switch database: %w", err)
 	}
 
 	sqlDB, err := db.DB()
@@ -56,9 +76,9 @@ func NewDB(config config.DatabaseConfig, logger logger.Interface, gormConfig *go
 		return nil, fmt.Errorf("failed to get sql db: %w", err)
 	}
 
-	sqlDB.SetMaxIdleConns(config.MaxIdleConns)
-	sqlDB.SetMaxOpenConns(config.MaxOpenConns)
-	sqlDB.SetConnMaxLifetime(config.ConnMaxLifetime)
+	sqlDB.SetMaxIdleConns(cfg.MaxIdleConns)
+	sqlDB.SetMaxOpenConns(cfg.MaxOpenConns)
+	sqlDB.SetConnMaxLifetime(cfg.ConnMaxLifetime)
 
 	return &DB{db}, nil
 }
@@ -69,19 +89,4 @@ func (db *DB) Ping(ctx context.Context) error {
 		return err
 	}
 	return sqlDB.PingContext(ctx)
-}
-
-func GetMySQLDSN(config config.DatabaseConfig) string {
-	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", config.Username, config.Password, config.Host, config.Port, config.DatabaseName)
-
-	queryParams := url.Values{}
-	queryParams.Add("charset", config.Charset)
-	if config.ParseTime {
-		queryParams.Add("parseTime", "True")
-	} else {
-		queryParams.Add("parseTime", "False")
-	}
-	queryParams.Add("loc", config.Timezone)
-
-	return fmt.Sprintf("%s?%s", dsn, queryParams.Encode())
 }
