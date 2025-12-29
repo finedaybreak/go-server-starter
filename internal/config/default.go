@@ -30,7 +30,7 @@ var DefaultConfig = Config{
 		Port:            3306,
 		Username:        "root",
 		Password:        "root",
-		DatabaseName:    "test_db",
+		Name:            "test_db",
 		MaxIdleConns:    10,
 		MaxOpenConns:    100,
 		ConnMaxLifetime: 10 * time.Second,

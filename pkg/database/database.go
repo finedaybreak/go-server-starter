@@ -4,8 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 	"go-server-starter/internal/config"
+	"time"
 
 	mysqlDriver "github.com/go-sql-driver/mysql"
 	"gorm.io/driver/mysql"
@@ -36,8 +36,8 @@ func NewDB(cfg config.DatabaseConfig, logger logger.Interface, gormConfig *gorm.
 
 	loc, _ := time.LoadLocation(cfg.Timezone)
 
-	// Connect to MySQL server without database name
-	mysqlConfig := &mysqlDriver.Config{
+	// Connect to MySQL server without database name to create database if needed
+	mysqlConfigWithoutDB := &mysqlDriver.Config{
 		User:      cfg.Username,
 		Passwd:    cfg.Password,
 		Net:       "tcp",
@@ -53,22 +53,46 @@ func NewDB(cfg config.DatabaseConfig, logger logger.Interface, gormConfig *gorm.
 	}
 	GConfig.Logger = logger
 
-	db, err := gorm.Open(mysql.New(mysql.Config{
-		DSN:               mysqlConfig.FormatDSN(),
+	// First, connect without database to create it if needed
+	tempDB, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:               mysqlConfigWithoutDB.FormatDSN(),
 		DefaultStringSize: 256,
 	}), GConfig)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to MySQL server: %w", err)
 	}
 
-	// Create database if not exists and switch to it
-	createSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET %s", cfg.DatabaseName, cfg.Charset)
-	if err := db.Exec(createSQL).Error; err != nil {
+	// Create database if not exists
+	createSQL := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS `%s` CHARACTER SET %s", cfg.Name, cfg.Charset)
+	if err := tempDB.Exec(createSQL).Error; err != nil {
 		return nil, fmt.Errorf("failed to create database: %w", err)
 	}
 
-	if err := db.Exec(fmt.Sprintf("USE `%s`", cfg.DatabaseName)).Error; err != nil {
-		return nil, fmt.Errorf("failed to switch database: %w", err)
+	// Close temporary connection
+	tempSqlDB, err := tempDB.DB()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get temp sql db: %w", err)
+	}
+	tempSqlDB.Close()
+
+	// Now connect with database name in DSN
+	mysqlConfigWithDB := &mysqlDriver.Config{
+		User:      cfg.Username,
+		Passwd:    cfg.Password,
+		Net:       "tcp",
+		Addr:      fmt.Sprintf("%s:%d", cfg.Host, cfg.Port),
+		DBName:    cfg.Name,
+		ParseTime: cfg.ParseTime,
+		Loc:       loc,
+		Params:    map[string]string{"charset": cfg.Charset},
+	}
+
+	db, err := gorm.Open(mysql.New(mysql.Config{
+		DSN:               mysqlConfigWithDB.FormatDSN(),
+		DefaultStringSize: 256,
+	}), GConfig)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
 	sqlDB, err := db.DB()

@@ -70,7 +70,7 @@ type DatabaseConfig struct {
 	Port            int           `mapstructure:"port"`
 	Username        string        `mapstructure:"username"`
 	Password        string        `mapstructure:"password"`
-	DatabaseName    string        `mapstructure:"databaseName"`
+	Name            string        `mapstructure:"name"`
 	MaxIdleConns    int           `mapstructure:"maxIdleConns"`
 	MaxOpenConns    int           `mapstructure:"maxOpenConns"`
 	ConnMaxLifetime time.Duration `mapstructure:"connMaxLifetime"`

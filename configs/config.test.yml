@@ -3,7 +3,7 @@ database:
   port: 3306
   username: root
   password: root
-  databaseName: test_db
+  name: test_db 
   maxIdleConns: 10
   maxOpenConns: 100
   connMaxLifetime: 10s
