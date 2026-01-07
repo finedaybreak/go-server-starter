@@ -2,6 +2,7 @@ package router
 
 import (
 	"go-server-starter/internal/handler"
+	"go-server-starter/internal/middleware"
 	"go-server-starter/pkg/auth"
 	"go-server-starter/pkg/jwt"
 
@@ -9,14 +10,15 @@ import (
 )
 
 type Router struct {
-	handler handler.Handler
-	router  *gin.RouterGroup
-	jwt     *jwt.JWT
-	auth    auth.Auth
+	handler   handler.Handler
+	router    *gin.RouterGroup
+	jwt       *jwt.JWT
+	auth      auth.Auth
+	ratelimit *middleware.RateLimit
 }
 
-func NewRouter(handler handler.Handler, router *gin.RouterGroup, jwt *jwt.JWT, auth auth.Auth) *Router {
-	return &Router{handler: handler, router: router, jwt: jwt, auth: auth}
+func NewRouter(handler handler.Handler, router *gin.RouterGroup, jwt *jwt.JWT, auth auth.Auth, ratelimit *middleware.RateLimit) *Router {
+	return &Router{handler: handler, router: router, jwt: jwt, auth: auth, ratelimit: ratelimit}
 }
 
 func (r *Router) SetupRoutes() {

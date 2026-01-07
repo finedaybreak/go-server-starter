@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"go-server-starter/internal/constant"
 	"go-server-starter/internal/ctx"
 	"go-server-starter/internal/enum"
 	"go-server-starter/internal/exception"
@@ -45,7 +46,7 @@ func (s *UserRoleServiceImpl) GetRolesCodeByUniCode(ctx *ctx.Context, uniCode st
 }
 
 func (s *UserRoleServiceImpl) GetCachedRolesCodeByUniCode(ctx *ctx.Context, uniCode string) ([]enum.RoleCode, *exception.Exception) {
-	dataStr, err := s.redis.Get(ctx.Ctx, redis.KeyAuthRoles(uniCode)).Result()
+	dataStr, err := s.redis.Get(ctx.Ctx, constant.RedisKeyOfAuthRoles(uniCode)).Result()
 	if err != nil {
 		// 如果redis 非正常报错，则返回错误
 		if err != goredis.Nil {
@@ -64,7 +65,7 @@ func (s *UserRoleServiceImpl) GetCachedRolesCodeByUniCode(ctx *ctx.Context, uniC
 				return nil, exception.InternalServerError.Append(err.Error())
 			}
 			// 将角色缓存到redis
-			if err := s.redis.Set(ctx.Ctx, redis.KeyAuthRoles(uniCode), rolesJSON, redis.TTLAuthRoles).Err(); err != nil {
+			if err := s.redis.Set(ctx.Ctx, constant.RedisKeyOfAuthRoles(uniCode), rolesJSON, constant.TTLAuthRoles).Err(); err != nil {
 				s.logger.Error("set cached roles code by uni code failed", zap.String("uniCode", uniCode), zap.Error(err))
 				return nil, exception.InternalServerError.Append(err.Error())
 			}

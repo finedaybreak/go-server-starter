@@ -37,6 +37,7 @@ type App struct {
 	logger     *zap.Logger
 	snowflake  *snowflake.Snowflake
 	translator *translator.Translator
+	ratelimit  *middleware.RateLimit
 	jwt        *jwt.JWT
 	auth       auth.Auth
 	handler    handler.Handler
@@ -173,13 +174,17 @@ func (a *App) Start() error {
 		a.service,
 		a.logger.Named("HANDLER"),
 	)
-
+	// 初始化ratelimit
+	a.ratelimit = middleware.NewRateLimit(a.redis, a.logger.Named("RATELIMIT"))
+	// 每分钟限流 100 次
+	a.engine.Use(a.ratelimit.RateLimit(100))
 	// 初始化router
 	router := router.NewRouter(
 		a.handler,
 		a.engine.Group(serverConfig.APIPrefix),
 		a.jwt,
 		a.auth,
+		a.ratelimit,
 	)
 	router.SetupRoutes()
 
