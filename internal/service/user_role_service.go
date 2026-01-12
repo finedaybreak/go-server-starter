@@ -65,7 +65,7 @@ func (s *UserRoleServiceImpl) GetCachedRolesCodeByUniCode(ctx *ctx.Context, uniC
 				return nil, exception.InternalServerError.Append(err.Error())
 			}
 			// 将角色缓存到redis
-			if err := s.redis.Set(ctx.Ctx, constant.RedisKeyOfAuthRoles(uniCode), rolesJSON, constant.TTLAuthRoles).Err(); err != nil {
+			if err := s.redis.Set(ctx.Ctx, constant.RedisKeyOfAuthRoles(uniCode), rolesJSON, constant.REDIS_EXPIRE_OF_AUTH_ROLES).Err(); err != nil {
 				s.logger.Error("set cached roles code by uni code failed", zap.String("uniCode", uniCode), zap.Error(err))
 				return nil, exception.InternalServerError.Append(err.Error())
 			}

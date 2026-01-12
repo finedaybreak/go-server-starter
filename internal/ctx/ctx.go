@@ -105,9 +105,10 @@ func (c *Context) GetPathParamID(key string) (uint64, *exception.Exception) {
 
 func (c *Context) ToError(err *exception.Exception) {
 	// Translate exception message if i18nKey is set
-	message := err.Message
-	if err.I18nKey != "" {
-		message = c.T(err.I18nKey)
+	locale := c.GetLocale()
+	message := err.I18nMsg.T(locale)
+	if message == "" {
+		message = err.Message
 	}
 
 	c.Gtx.JSON(err.StatusCode, gin.H{
@@ -119,7 +120,8 @@ func (c *Context) ToError(err *exception.Exception) {
 }
 
 func (c *Context) ToSuccess(data any) {
-	message := c.T(i18n.RespSuccess)
+	locale := c.GetLocale()
+	message := i18n.RespSuccess.T(locale)
 	c.Gtx.JSON(http.StatusOK, gin.H{
 		"code":    0,
 		"message": message,
@@ -138,14 +140,6 @@ func (c *Context) GetLocale() string {
 		return localeStr
 	}
 	return i18n.DefaultLocale
-}
-
-// T 翻译消息键，支持可选参数
-// 这是一个便捷方法，使用上下文的语言环境
-// 示例: ctx.T(i18n.MsgUserRegistered, map[string]string{"name": "Alice"})
-func (c *Context) T(key string, params ...map[string]string) string {
-	locale := c.GetLocale()
-	return i18n.GetInstance().T(locale, key, params...)
 }
 
 // GetDeviceType 从gin header 字段判断设备类型

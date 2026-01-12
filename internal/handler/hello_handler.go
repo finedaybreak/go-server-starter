@@ -27,5 +27,5 @@ func (h *HelloHandlerImpl) Hello(c *gin.Context) {
 		ctx.ToSuccess("Hello, World!")
 		return
 	}
-	ctx.ToSuccess(ctx.T(i18n.EchoHello, map[string]string{"name": name}))
+	ctx.ToSuccess(i18n.EchoHello.T(ctx.GetLocale(), map[string]string{"name": name}))
 }

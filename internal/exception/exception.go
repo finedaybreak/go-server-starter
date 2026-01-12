@@ -1,24 +1,31 @@
 package exception
 
-import "fmt"
+import (
+	"fmt"
+	"go-server-starter/internal/i18n"
+)
 
 type Exception struct {
-	StatusCode int      `json:"-"`
-	Code       int      `json:"code"`
-	Message    string   `json:"message"` // Will be set during translation
-	Details    []string `json:"details"`
-	I18nKey    string   `json:"-"` // i18n translation key
+	StatusCode int       `json:"-"`
+	Code       int       `json:"code"`
+	Message    string    `json:"message"` // Will be set during translation
+	Details    []string  `json:"details"`
+	I18nMsg    i18n.Text `json:"-"` // i18n message for translation
 }
 
 var codes = map[int]struct{}{}
 
-// New creates a new exception with an i18n key
-func New(statusCode int, code int, message string, i18nKey string) *Exception {
+// register is the internal function to register an exception code
+func register(statusCode int, code int, message string, i18nMsg i18n.Text) *Exception {
 	if _, ok := codes[code]; ok {
 		panic(fmt.Sprintf("Exception code %d already exists", code))
 	}
 	codes[code] = struct{}{}
-	return &Exception{StatusCode: statusCode, Code: code, Message: message, Details: []string{}, I18nKey: i18nKey}
+	return &Exception{StatusCode: statusCode, Code: code, Message: message, Details: []string{}, I18nMsg: i18nMsg}
+}
+
+func NewException(statusCode int, code int, message string, i18nMsg i18n.Text) *Exception {
+	return register(statusCode, code, message, i18nMsg)
 }
 
 func (e *Exception) clone() *Exception {

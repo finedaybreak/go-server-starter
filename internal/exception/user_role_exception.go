@@ -6,6 +6,6 @@ import (
 )
 
 var (
-	UserRoleNotFound      = New(http.StatusNotFound, 21001, "user role not found", i18n.ExcUserRoleNotFound)
-	UserRoleAlreadyExists = New(http.StatusBadRequest, 21002, "user role already exists", i18n.ExcUserRoleAlreadyExists)
+	UserRoleNotFound      = UserRole.New(http.StatusNotFound, "user role not found", i18n.ExcUserRoleNotFound)
+	UserRoleAlreadyExists = UserRole.New(http.StatusBadRequest, "user role already exists", i18n.ExcUserRoleAlreadyExists)
 )

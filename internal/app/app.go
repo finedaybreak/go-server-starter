@@ -6,7 +6,6 @@ import (
 	"go-server-starter/internal/config"
 	"go-server-starter/internal/enum"
 	"go-server-starter/internal/handler"
-	"go-server-starter/internal/i18n"
 	"go-server-starter/internal/middleware"
 	"go-server-starter/internal/model"
 	"go-server-starter/internal/repo"
@@ -81,11 +80,6 @@ func (a *App) Start() error {
 	}
 	a.translator = trans
 	a.engine.Use(middleware.Translations(trans))
-
-	// 初始化i18n
-	if _, err := i18n.Init(); err != nil {
-		return err
-	}
 
 	a.engine.Use(middleware.Locale())
 
