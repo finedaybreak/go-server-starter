@@ -1,6 +1,9 @@
 {
   "cSpell.words": [
     "Asyn",
-    "goredis"
+    "goredis",
+    "tolower",
+    "toupper",
+    "verrors"
   ]
 }

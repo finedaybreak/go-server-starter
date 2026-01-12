@@ -81,8 +81,6 @@ func (a *App) Start() error {
 	a.translator = trans
 	a.engine.Use(middleware.Translations(trans))
 
-	a.engine.Use(middleware.Locale())
-
 	// 初始化http服务器
 	a.server = &http.Server{
 		Addr:           fmt.Sprintf(":%d", serverConfig.Port),

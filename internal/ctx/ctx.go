@@ -3,6 +3,7 @@ package ctx
 import (
 	"context"
 	"errors"
+	"go-server-starter/internal/constant"
 	"go-server-starter/internal/enum"
 	"go-server-starter/internal/exception"
 	"go-server-starter/internal/i18n"
@@ -17,11 +18,6 @@ import (
 	"github.com/go-playground/validator/v10"
 )
 
-const (
-	USER_UNI_CODE_KEY = "user_uni_code"
-	LOCALE_KEY        = "locale"
-)
-
 type Context struct {
 	Ctx        context.Context
 	Gtx        *gin.Context
@@ -31,7 +27,7 @@ type Context struct {
 // FromGinCtx 从 Gin 上下文创建一个新的 Context
 func FromGinCtx(c *gin.Context) *Context {
 	var translator ut.Translator
-	trans, ok := c.Get("trans")
+	trans, ok := c.Get(constant.CTX_KEY_OF_TRANSLATOR)
 	if !ok {
 		translator = nil
 	} else {
@@ -71,7 +67,7 @@ func (c *Context) ShouldBind(obj any) *exception.Exception {
 }
 
 func (c *Context) GetUserUniCode() (string, *exception.Exception) {
-	code := c.Gtx.GetString(USER_UNI_CODE_KEY)
+	code := c.Gtx.GetString(constant.CTX_KEY_OF_USER_UNI_CODE)
 	if code == "" {
 		return "", exception.UserUniCodeNotFound
 	}
@@ -79,13 +75,13 @@ func (c *Context) GetUserUniCode() (string, *exception.Exception) {
 }
 
 func (c *Context) SetUserUniCode(code string) {
-	c.Gtx.Set(USER_UNI_CODE_KEY, code)
+	c.Gtx.Set(constant.CTX_KEY_OF_USER_UNI_CODE, code)
 }
 
 func (c *Context) GetUserID(dbRepo repo.Repo) (uint64, *exception.Exception) {
-	code := c.Gtx.GetString(USER_UNI_CODE_KEY)
-	if code == "" {
-		return 0, exception.UserUniCodeNotFound
+	code, exc := c.GetUserUniCode()
+	if exc != nil {
+		return 0, exc
 	}
 	var ID, err = dbRepo.User().GetIDByUniCode(c.Ctx, code)
 	if err != nil {
@@ -132,14 +128,14 @@ func (c *Context) ToSuccess(data any) {
 
 // GetLocale 从上下文中获取当前的语言环境
 func (c *Context) GetLocale() string {
-	locale, exists := c.Gtx.Get(LOCALE_KEY)
+	locale, exists := c.Gtx.Get(constant.CTX_KEY_OF_LOCALE)
 	if !exists {
-		return i18n.DefaultLocale
+		return "zh"
 	}
 	if localeStr, ok := locale.(string); ok {
 		return localeStr
 	}
-	return i18n.DefaultLocale
+	return "zh"
 }
 
 // GetDeviceType 从gin header 字段判断设备类型

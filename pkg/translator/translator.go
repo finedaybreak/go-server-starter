@@ -1,6 +1,7 @@
 package translator
 
 import (
+	"go-server-starter/internal/i18n"
 	"go-server-starter/pkg/validator"
 
 	"github.com/gin-gonic/gin/binding"
@@ -35,23 +36,23 @@ func NewTranslator() (*Translator, error) {
 // registerTranslations 注册所有语言的翻译
 func registerTranslations(v *_validator.Validate, uni *ut.UniversalTranslator) error {
 	// 注册中文翻译
-	if trans, found := uni.GetTranslator("zh"); found {
+	if trans, found := uni.GetTranslator(i18n.LOCALE_ZH); found {
 		if err := zh_trans.RegisterDefaultTranslations(v, trans); err != nil {
 			return err
 		}
 		// 注册自定义验证规则的中文翻译
-		if err := validator.RegisterTranslations(v, trans, "zh"); err != nil {
+		if err := validator.RegisterTranslations(v, trans, i18n.LOCALE_ZH); err != nil {
 			return err
 		}
 	}
 
 	// 注册英文翻译
-	if trans, found := uni.GetTranslator("en"); found {
+	if trans, found := uni.GetTranslator(i18n.LOCALE_EN); found {
 		if err := en_trans.RegisterDefaultTranslations(v, trans); err != nil {
 			return err
 		}
 		// 注册自定义验证规则的英文翻译
-		if err := validator.RegisterTranslations(v, trans, "en"); err != nil {
+		if err := validator.RegisterTranslations(v, trans, i18n.LOCALE_EN); err != nil {
 			return err
 		}
 	}
