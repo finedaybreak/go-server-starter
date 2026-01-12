@@ -12,10 +12,11 @@ type Text struct {
 }
 
 const (
-	LOCALE_ZH    = "zh"
-	LOCALE_EN    = "en"
-	LOCALE_ZH_CN = "zh-cn"
-	LOCALE_EN_US = "en-us"
+	LOCALE_ZH      = "zh"
+	LOCALE_EN      = "en"
+	LOCALE_ZH_CN   = "zh-cn"
+	LOCALE_EN_US   = "en-us"
+	DEFAULT_LOCALE = LOCALE_ZH
 )
 
 func NormalizeLocale(locale string) string {
@@ -25,7 +26,7 @@ func NormalizeLocale(locale string) string {
 	case LOCALE_EN, LOCALE_EN_US:
 		return LOCALE_EN
 	}
-	return LOCALE_ZH
+	return DEFAULT_LOCALE
 }
 
 // T returns the translated message for the given locale

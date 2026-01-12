@@ -130,12 +130,12 @@ func (c *Context) ToSuccess(data any) {
 func (c *Context) GetLocale() string {
 	locale, exists := c.Gtx.Get(constant.CTX_KEY_OF_LOCALE)
 	if !exists {
-		return "zh"
+		return i18n.DEFAULT_LOCALE
 	}
 	if localeStr, ok := locale.(string); ok {
 		return localeStr
 	}
-	return "zh"
+	return i18n.DEFAULT_LOCALE
 }
 
 // GetDeviceType 从gin header 字段判断设备类型
